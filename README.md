@@ -5,6 +5,8 @@ A standalone script to poll SNMPv2 targets and forward the results to Datadog, w
 
 Uses multiprocessing to parallelise things, to get past the scalability limit of datadog-agent's single-threaded nature, and to avoid the Global Interpreter Lock that would otherwise prevent concurrency.
 
+Automatically re-reads the config file if it's been changed. Does this by checking the last-modified time at the start of each run, and comparing that to the value stored last time it was read.
+
 Written for python 3.5, with no attempt at backward compatibility.
 
 # Configuration
