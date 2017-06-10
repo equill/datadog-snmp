@@ -64,7 +64,7 @@ def main(logger):
         for proc in procs:
             proc.join()
         # Prove we got something in the state dict
-        print(state)
+        logger.debug('State: %s' % state)
         # Pause a second
         time.sleep(10)
     # Explicitly return _something_

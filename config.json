@@ -4,16 +4,11 @@
         "community": "public",
         "metrics": [
         {
-            "oid": "sysName",
-            "mib": "SNMPv2-MIB",
-            "tags": ["hostname:localhost"],
-            "metricname": "hostname"
-        },
-        {
             "oid": "sysUpTime",
             "mib": "SNMPv2-MIB",
             "tags": ["hostname:localhost"],
-            "metricname": "uptime"
+            "metricname": "uptime",
+            "type": "counter"
         }
         ]
 }

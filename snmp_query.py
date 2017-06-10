@@ -138,20 +138,26 @@ def query_device(details, logger, state):
         index='%s-%s' % (hostname, oid)
         # Fetch the result
         logger.debug('Fetching OID %s::%s from target %s' % (mib, oid, hostname))
-        result=snmpGet(hostname, mib, oid, details['community'], logger)
+        result=int(snmpGet(hostname, mib, oid, details['community'], logger))
+        # Convert it to integer if necessary
+        if 'type' in metric and metric['type'] in ['counter', 'gauge']:
+            val=int(result)
+        else:
+            val=result
         logger.debug('%s - %s::%s (%s) = %s' % (hostname, mib, oid, metricname, result))
         #
         # Handling counter-type metrics
-        ## If this is the first run, the index won't already be in the dict
-        #if index in state:
-        #    # To simulate changes in SNMP counters, calculate the difference between
-        #    # the current value and the stored one
-        #    diff = result - state[index]
-        #    logger.debug('%s delta = %s' % (index, diff))
-        ## This is the first run; log it so the operator knows what's going on.
-        #else:
-        #    logger.debug('First run for %s; skipping the diff on this run' % index)
-        ## Set the result
-        #logger.debug('Adding %s:%s to the state dict' % (metric, result))
-        #state[index]=result
+        if 'type' in metric and metric['type'] == 'counter':
+            # If this is the first run, the index won't already be in the dict
+            if index in state:
+                # To simulate changes in SNMP counters, calculate the difference between
+                # the current value and the stored one
+                diff = val - state[index]
+                logger.debug('%s delta = %s' % (index, diff))
+            # This is the first run; log it so the operator knows what's going on.
+            else:
+                logger.debug('First run for %s; skipping the diff on this run' % index)
+            # Set the result
+            logger.debug('Adding %s:%s to the state dict' % (metric, val))
+            state[index]=val
     return True
