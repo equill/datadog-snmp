@@ -64,7 +64,10 @@ def read_configs(configpath):
 
 def main(logger, configpath):
     '''
-    Demo function to test multiprocessing
+    Make stuff happen
+    - read the configs, and automagically re-read them if the file's last-modified
+      time changes
+    - handle the multiprocessing overhead
     '''
     # Process-management
     procs=[]            # A list of running processes
