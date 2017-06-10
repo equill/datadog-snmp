@@ -22,8 +22,9 @@ A JSON-formatted text file is expected; I know comments aren't valid in JSON, bu
       {
         // Mandatory attributes
         "oid": "sysUpTime",     // Can be either a name or a numeric OID
-        "mib": "SNMPv2-MIB",    // If this isn't specified, it's assumed to be numeric
         // Optional attributes
+        "mib": "SNMPv2-MIB",    // If this isn't specified, it's assumed to be numeric.
+                                // NB: you'll need to append .0 yourself for scalars.
         "tags": ["hostname:localhost"], // Tags to forward to Datadog with this metric
         "metricname": "hostname",       // The name to give Datadog;
                                         // if unspecified, the OID will be used.

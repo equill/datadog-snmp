@@ -29,14 +29,14 @@ import re
 
 # Utility functions
 
-def snmpGet(hostname, mib, oid, community, logger, port=161):
+def snmpGet(hostname, oid, community, logger, mib=False, port=161):
     '''
     Perform an SNMP GET for a single OID or scalar attribute.
     Return only the value.
     '''
-    # Use pysnmp to retrieve the data
-    errorIndication, errorStatus, errorIndex, varBinds = next(
-            pysnmp.hlapi.getCmd(
+    # Handle the case of an unspecified MIB
+    if mib:
+        cmd=pysnmp.hlapi.getCmd(
                 # Create the SNMP engine
                 pysnmp.hlapi.SnmpEngine(),
                 # Authentication: set the SNMP version (2c) and community-string
@@ -46,8 +46,25 @@ def snmpGet(hostname, mib, oid, community, logger, port=161):
                 # Context is a v3 thing, but appears to be required anyway
                 pysnmp.hlapi.ContextData(),
                 # Specify the MIB object to read.
+                # The 0 means we're retrieving a scalar value,
+                # And we're helpfully .
+                pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(mib, oid, 0)))
+    else:
+        cmd=pysnmp.hlapi.getCmd(
+                # Create the SNMP engine
+                pysnmp.hlapi.SnmpEngine(),
+                # Authentication: set the SNMP version (2c) and community-string
+                pysnmp.hlapi.CommunityData(community, mpModel=1),
+                # Set the transport and target: UDP, hostname:port
+                pysnmp.hlapi.UdpTransportTarget((hostname, port)),
+                # Context is a v3 thing, but appears to be required anyway
+                pysnmp.hlapi.ContextData(),
+                # Specify the object to read.
                 # The 0 means we're retrieving a scalar value.
-                pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(mib, oid, 0))))
+                pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(oid))
+                )
+    # Use pysnmp to retrieve the data
+    errorIndication, errorStatus, errorIndex, varBinds = next(cmd)
     # Handle the responses
     if errorIndication:
         logger.error(errorIndication)
@@ -132,14 +149,26 @@ def query_device(details, logger, state):
     for metric in details['metrics']:
         # Shorter references
         oid=metric['oid']
-        mib=metric['mib']
         metricname=metric['metricname']
+        # Properly handle an unspecified MIB
+        if 'mib' in metric:
+            mib=metric['mib']
+        else:
+            mib=False
         # Generate the index in the shared-state dict
         index='%s-%s' % (hostname, oid)
         # Fetch the result
-        logger.debug('Fetching OID %s::%s from target %s' % (mib, oid, hostname))
-        result=int(snmpGet(hostname, mib, oid, details['community'], logger))
-        logger.debug('%s - %s::%s (%s) = %s' % (hostname, mib, oid, metricname, result))
+        if mib:
+            logger.debug('Fetching OID %s::%s from target %s' % (mib, oid, hostname))
+        else:
+            logger.debug('Fetching OID %s from target %s' % (oid, hostname))
+        # Actually fetch the result amid all the mad logging
+        val=int(snmpGet(hostname, oid, details['community'], logger, mib))
+        # Do some more mad logging
+        if mib:
+            logger.debug('%s - %s::%s (%s) = %s' % (hostname, mib, oid, metricname, val))
+        else:
+            logger.debug('%s - %s (%s) = %s' % (hostname, oid, metricname, val))
         #
         # Handling counter-type metrics
         if 'counter' in metric:

@@ -8,7 +8,13 @@
             "mib": "SNMPv2-MIB",
             "tags": ["hostname:localhost"],
             "metricname": "uptime",
-            "type": "counter"
+            "counter": true
+        },
+        {
+            "oid": ".1.3.6.1.2.1.1.3.0",
+            "tags": ["hostname:localhost"],
+            "metricname": "otherUptime",
+            "counter": true
         }
         ]
 }
