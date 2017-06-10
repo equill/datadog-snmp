@@ -9,9 +9,9 @@ Written for python 3.5, with no attempt at backward compatibility.
 
 # Configuration
 
-A JSON-formatted text file is expected; note that the parser chokes on any comments in th e file.
+A JSON-formatted text file is expected; I know comments aren't valid in JSON, but they seemed like the best way of illustrating this:
 
-```json
+```
 [   // A list of targets in the form of dicts
   {
     "hostname": "localhost",    // Without this, you're not getting far
