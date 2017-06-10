@@ -35,6 +35,16 @@ import time
 import snmp_query
 
 
+# Settings
+
+# Where to expect the config file,
+# if it's not specified via --config
+DEFAULT_CONFIGPATH='config.json'
+
+# How many seconds to pause between runs
+PERIOD=10
+
+
 # The actual code
 
 def read_configs(configpath):
@@ -45,7 +55,7 @@ def read_configs(configpath):
     if configpath:
         filepath=configpath
     else:
-        filepath="config.json"
+        filepath=DEFAULT_CONFIGPATH
     # Open the file and read it
     logger.debug('Attempting to open config file "%s"' % filepath)
     with open(filepath) as infile:
@@ -65,7 +75,7 @@ def main(logger, configpath):
     config_mtime=os.path.getmtime(configpath)
     while True:
         # Check whether to re-read the configs
-        if os.path.getmtime(configpath) > config_mtime:
+        if os.path.getmtime(configpath) != config_mtime:
             logger.debug('Config file has changed; re-reading.')
             config_mtime=os.path.getmtime(configpath)
             configs=read_configs(configpath)
@@ -82,7 +92,7 @@ def main(logger, configpath):
         # Prove we got something in the state dict
         logger.debug('State: %s' % state)
         # Pause a second
-        time.sleep(10)
+        time.sleep(PERIOD)
     # Explicitly return _something_
     return True
 
