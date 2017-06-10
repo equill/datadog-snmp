@@ -1,0 +1,17 @@
+[
+{
+    "hostname": "host1",
+    "community": "public",
+    "metrics": ["width", "length", "height"]
+},
+{
+    "hostname": "host2",
+    "community": "public",
+    "metrics": ["smell", "colour", "sound"]
+},
+{
+        "hostname": "localhost",
+        "community": "public",
+        "metrics": ["sysname", "uptime"]
+}
+]
