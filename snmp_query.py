@@ -124,7 +124,7 @@ def snmpBulkGet(hostname, mib, attr, community, logger, port=161):
 
 def query_device(details, logger, state):
     '''
-    When completed, will send an SNMP query to a device, and report on the results.
+    Send an SNMP query to a device, and report on the results.
     '''
     hostname=details['hostname']
     logger.info('Querying host %s' % hostname)
@@ -139,15 +139,10 @@ def query_device(details, logger, state):
         # Fetch the result
         logger.debug('Fetching OID %s::%s from target %s' % (mib, oid, hostname))
         result=int(snmpGet(hostname, mib, oid, details['community'], logger))
-        # Convert it to integer if necessary
-        if 'type' in metric and metric['type'] in ['counter', 'gauge']:
-            val=int(result)
-        else:
-            val=result
         logger.debug('%s - %s::%s (%s) = %s' % (hostname, mib, oid, metricname, result))
         #
         # Handling counter-type metrics
-        if 'type' in metric and metric['type'] == 'counter':
+        if 'counter' in metric:
             # If this is the first run, the index won't already be in the dict
             if index in state:
                 # To simulate changes in SNMP counters, calculate the difference between
