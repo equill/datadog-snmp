@@ -127,6 +127,7 @@ def query_device(details, logger, state):
     When completed, will send an SNMP query to a device, and report on the results.
     '''
     hostname=details['hostname']
+    logger.info('Querying host %s' % hostname)
     # Process the metrics in turn
     for metric in details['metrics']:
         # Shorter references
@@ -146,11 +147,11 @@ def query_device(details, logger, state):
         #    # To simulate changes in SNMP counters, calculate the difference between
         #    # the current value and the stored one
         #    diff = result - state[index]
-        #    logger.info('%s delta = %s' % (index, diff))
+        #    logger.debug('%s delta = %s' % (index, diff))
         ## This is the first run; log it so the operator knows what's going on.
         #else:
-        #    logger.info('First run for %s; skipping the diff on this run' % index)
+        #    logger.debug('First run for %s; skipping the diff on this run' % index)
         ## Set the result
-        #logger.info('Adding %s:%s to the state dict' % (metric, result))
+        #logger.debug('Adding %s:%s to the state dict' % (metric, result))
         #state[index]=result
     return True
