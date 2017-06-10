@@ -66,7 +66,7 @@ def main(logger):
         # Prove we got something in the state dict
         print(state)
         # Pause a second
-        time.sleep(1)
+        time.sleep(10)
     # Explicitly return _something_
     return True
 
