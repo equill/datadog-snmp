@@ -27,6 +27,7 @@ import argparse
 import json
 import logging
 import multiprocessing as mp
+import os
 import sys
 import time
 
@@ -36,15 +37,22 @@ import snmp_query
 
 # The actual code
 
-def read_configs(filepath="config.json"):
+def read_configs(configpath):
     '''
-    When complete, will read a config file and return the result.
+    Read a config file and return the result.
     '''
+    # Figure out where to look for the config file
+    if configpath:
+        filepath=configpath
+    else:
+        filepath="config.json"
+    # Open the file and read it
+    logger.debug('Attempting to open config file "%s"' % filepath)
     with open(filepath) as infile:
         configs=json.load(infile)
     return configs
 
-def main(logger):
+def main(logger, configpath):
     '''
     Demo function to test multiprocessing
     '''
@@ -52,9 +60,17 @@ def main(logger):
     procs=[]            # A list of running processes
     mgr=mp.Manager()    # Source of shared-state structures
     state=mgr.dict()    # The shared dict we'll use for sharing state
+    # Read the initial config file, and remember when we read it
+    configs=read_configs(configpath)
+    config_mtime=os.path.getmtime(configpath)
     while True:
+        # Check whether to re-read the configs
+        if os.path.getmtime(configpath) > config_mtime:
+            logger.debug('Config file has changed; re-reading.')
+            config_mtime=os.path.getmtime(configpath)
+            configs=read_configs(configpath)
         # Kick off the processes
-        for details in read_configs():
+        for details in configs:
             proc=mp.Process(target=snmp_query.query_device,
                     args=(details, logger, state),
                     name=details['hostname'])
@@ -81,9 +97,15 @@ if __name__ == '__main__':
     # Get the command-line arguments
     parser = argparse.ArgumentParser(description='Perform SNMP discovery on a host, returning its data in a single structure.')
     parser.add_argument('--debug', action='store_true', help='Enable debug logging')
+    parser.add_argument('--config', action='store', help='Path to the config file')
     args=parser.parse_args()
     # Set debug logging, if requested
     if args.debug:
         logger.setLevel(logging.DEBUG)
+    # Check whether the default config path was overridden
+    if args.config:
+        configpath=args.config
+    else:
+        configpath=False
     # Run the script
-    main(logger)
+    main(logger, configpath)
