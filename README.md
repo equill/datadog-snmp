@@ -11,7 +11,7 @@ Written for python 3.5, with no attempt at backward compatibility.
 
 A JSON-formatted text file is expected; note that the parser chokes on any comments in th e file.
 
-```
+```json
 [   // A list of targets in the form of dicts
   {
     "hostname": "localhost",    // Without this, you're not getting far
