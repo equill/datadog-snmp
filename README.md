@@ -9,6 +9,9 @@ Automatically re-reads the config file if it's been changed. Does this by checki
 
 Written for python 3.5, with no attempt at backward compatibility.
 
+Note: currently only handles scalars. Tables are not handled.
+Also, it doesn't yet actually send anything to Datadog.
+
 # Configuration
 
 A JSON-formatted text file is expected; I know comments aren't valid in JSON, but they seemed like the best way of illustrating this:
