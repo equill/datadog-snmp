@@ -1,6 +1,7 @@
 {
     "global": {
-        "datadog_api_key": "key goes here"
+        "datadog_api_key": "key goes here",
+        "period": 10
     },
     "metrics":
         [

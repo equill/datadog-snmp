@@ -21,7 +21,8 @@ A JSON-formatted text file is expected; I know comments aren't valid in JSON, bu
 ```
 {
     "global": {
-        "datadog_api_key": "key goes here"
+        "datadog_api_key": "key goes here",
+        "period": 60    // Optional; default is 60 seconds
     },
     "metrics": [   // A list of targets in the form of dicts
     {

@@ -43,7 +43,7 @@ import snmp_query
 DEFAULT_CONFIGPATH='config.json'
 
 # How many seconds to pause between runs
-PERIOD=10
+PERIOD_DEFAULT=60
 
 
 # The actual code
@@ -80,6 +80,10 @@ def main(logger, configpath):
     # Read the initial config file, and remember when we read it
     configs=read_configs(configpath)
     config_mtime=int(os.path.getmtime(configpath))
+    if 'period' in configs['global']:
+        period=configs['global']['period']
+    else:
+        period=PERIOD_GLOBAL
     # Start the process that reads the queue and feeds Datadog
     writer=mp.Process(target=result_writer.run, args=(queue, configs['global']['datadog_api_key'], logger), name='writer')
     writer.start()
@@ -97,7 +101,7 @@ def main(logger, configpath):
         # Kick off the SNMP-querying processes
         for target in configs['metrics']:
             proc=mp.Process(target=snmp_query.query_device,
-                    args=(target, logger, state, PERIOD, queue),
+                    args=(target, logger, state, period, queue),
                     name=target['hostname'])
             procs.append(proc) # Add the process to the list before starting it
             proc.start()
@@ -109,9 +113,9 @@ def main(logger, configpath):
         # Pause until the next run
         # being reasonably sure to start _on_ the minute (or whatever)
         endtime=int(time.time())
-        delay=((endtime + PERIOD) % PERIOD)
+        delay=((endtime + period) % period)
         if delay == 0:
-            delay == PERIOD
+            delay == period
         logger.info('Run complete at timestamp %d after %d seconds. Pausing %d seconds for the next run.' % (endtime, endtime - starttime, delay))
         time.sleep(delay)
     # Reclaim the writer
