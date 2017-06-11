@@ -57,9 +57,11 @@ def read_configs(configpath):
     else:
         filepath=DEFAULT_CONFIGPATH
     # Open the file and read it
-    logger.debug('Attempting to open config file "%s"' % filepath)
-    with open(filepath) as infile:
-        configs=json.load(infile)
+    logger.debug('Attempting to read config file "%s"' % filepath)
+    infile=open(filepath, 'r')
+    configs=json.load(infile)
+    infile.close()
+    logger.info('Parsed config file %s' % filepath)
     return configs
 
 def main(logger, configpath):
@@ -75,13 +77,17 @@ def main(logger, configpath):
     state=mgr.dict()    # The shared dict we'll use for sharing state
     # Read the initial config file, and remember when we read it
     configs=read_configs(configpath)
-    config_mtime=os.path.getmtime(configpath)
+    config_mtime=int(os.path.getmtime(configpath))
     while True:
+        starttime=int(time.time())
+        logger.info('Starting run with timestamp %d' % starttime)
         # Check whether to re-read the configs
-        if os.path.getmtime(configpath) != config_mtime:
-            logger.debug('Config file has changed; re-reading.')
-            config_mtime=os.path.getmtime(configpath)
+        config_curr_mtime=int(os.path.getmtime(configpath))
+        logger.debug('Config file last-modified timestamp: %d' % config_curr_mtime)
+        if config_curr_mtime > config_mtime:
+            logger.info("Config file's timestamp has changed from %s to %s; re-reading." % (config_mtime, config_curr_mtime))
             configs=read_configs(configpath)
+            config_mtime=int(os.path.getmtime(configpath))
         # Kick off the processes
         for details in configs:
             proc=mp.Process(target=snmp_query.query_device,
