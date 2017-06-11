@@ -94,8 +94,14 @@ def main(logger, configpath):
             proc.join()
         # Prove we got something in the state dict
         logger.debug('State: %s' % state)
-        # Pause a second
-        time.sleep(PERIOD)
+        # Pause until the next run
+        # being reasonably sure to start _on_ the minute (or whatever)
+        endtime=int(time.time())
+        delay=((endtime + PERIOD) % PERIOD)
+        if delay == 0:
+            delay == PERIOD
+        logger.info('Run complete at timestamp %d after %d seconds. Pausing %d seconds for the next run.' % (endtime, endtime - starttime, delay))
+        time.sleep(delay)
     # Explicitly return _something_
     return True
 
@@ -121,4 +127,5 @@ if __name__ == '__main__':
     else:
         configpath=False
     # Run the script
+    logger.info('Logging is ready. Starting main program.')
     main(logger, configpath)
