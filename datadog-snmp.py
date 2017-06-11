@@ -85,7 +85,7 @@ def main(logger, configpath):
         # Kick off the processes
         for details in configs:
             proc=mp.Process(target=snmp_query.query_device,
-                    args=(details, logger, state),
+                    args=(details, logger, state, PERIOD),
                     name=details['hostname'])
             procs.append(proc) # Add the process to the list before starting it
             proc.start()

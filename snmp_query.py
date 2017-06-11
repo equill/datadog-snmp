@@ -23,9 +23,12 @@
 #   limitations under the License.
 
 
+# Built-in modules
+import re
+import time
+
 # Third-party modules
 import pysnmp.hlapi
-import re
 
 # Utility functions
 
@@ -81,23 +84,31 @@ def snmpGet(hostname, oid, community, logger, mib=False, port=161):
         return varBinds[0][1].prettyPrint()
 
 
-def query_device(details, logger, state):
+def query_device(details, logger, state, period):
     '''
     Send an SNMP query to a device, and report on the results.
     '''
     hostname=details['hostname']
-    logger.info('Querying host %s' % hostname)
+    logger.debug('Querying host %s' % hostname)
     # Process the metrics in turn
     for metric in details['metrics']:
         # Shorter references
         oid=metric['oid']
-        metricname=metric['metricname']
+        if 'metricname' in metric:
+            metricname=metric['metricname']
+        else:
+            metricname=oid
+        # We're only allowing for two types of metric
+        if 'counter' in metric:
+            metrictype='counter'
+        else:
+            metrictype='gauge'
         # Properly handle an unspecified MIB
         if 'mib' in metric:
             mib=metric['mib']
         else:
             mib=False
-        # Generate the index in the shared-state dict
+        # Generate the index for the shared-state dict
         index='%s-%s' % (hostname, oid)
         # Fetch the result
         if mib:
@@ -113,17 +124,33 @@ def query_device(details, logger, state):
             logger.debug('%s - %s (%s) = %s' % (hostname, oid, metricname, val))
         #
         # Handling counter-type metrics
-        if 'counter' in metric:
+        if metrictype == 'counter':
             # If this is the first run, the index won't already be in the dict
             if index in state:
                 # To simulate changes in SNMP counters, calculate the difference between
                 # the current value and the stored one
                 diff = val - state[index]
                 logger.debug('%s delta = %s' % (index, diff))
+                # Calculate the value to send on as the result
+                rate = diff / period
+                value=rate
+                logger.debug('%s-%s rate: %s' % (hostname, index, value))
             # This is the first run; log it so the operator knows what's going on.
             else:
-                logger.debug('First run for %s; skipping the diff on this run' % index)
+                value=False
+                logger.debug('First run for %s; no result to return.' % index)
             # Set the result
             logger.debug('Adding %s:%s to the state dict' % (metric, val))
             state[index]=val
+        # If it's not a counter, the gauge's value _is_ what we want to return
+        else:
+            value=val
+        # Prepare and return the result
+        result={
+            'metricname': metricname,
+            'type': metrictype,
+            'value': (int(time.time()), val), # Tuple of timestamp and value
+            'tags': metric['tags'],
+        }
+        logger.debug('Result for %s-%s: %s' % (hostname, index, result))
     return True
