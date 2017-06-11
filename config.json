@@ -1,28 +1,34 @@
-[
 {
-        "hostname": "localhost",
-        "community": "public",
-        "metrics": [
+    "global": {
+        "datadog_api_key": "key goes here"
+    },
+    "metrics":
+        [
         {
-            "oid": "sysUpTime",
-            "mib": "SNMPv2-MIB",
-            "tags": ["hostname:localhost"],
-            "metricname": "uptime",
-            "counter": true
-        },
-        {
-            "oid": "ifInOctets.1",
-            "mib": "IF-MIB",
-            "tags": ["hostname:localhost", "interface:lo"],
-            "metricname": "ifInOctets",
-            "counter": true
-        },
-        {
-            "oid": ".1.3.6.1.2.1.2.2.1.16.1",
-            "tags": ["hostname:localhost", "interface:lo"],
-            "metricname": "ifOutOctets",
-            "counter": true
+            "hostname": "localhost",
+            "community": "public",
+            "metrics": [
+            {
+                "oid": "sysUpTime",
+                "mib": "SNMPv2-MIB",
+                "tags": ["hostname:localhost"],
+                "metricname": "uptime",
+                "counter": true
+            },
+            {
+                "oid": "ifInOctets.1",
+                "mib": "IF-MIB",
+                "tags": ["hostname:localhost", "interface:lo"],
+                "metricname": "ifInOctets",
+                "counter": true
+            },
+            {
+                "oid": ".1.3.6.1.2.1.2.2.1.16.1",
+                "tags": ["hostname:localhost", "interface:lo"],
+                "metricname": "ifOutOctets",
+                "counter": true
+            }
+            ]
         }
-        ]
+    ]
 }
-]

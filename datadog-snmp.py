@@ -94,11 +94,11 @@ def main(logger, configpath):
             logger.info("Config file's timestamp has changed from %s to %s; re-reading." % (config_mtime, config_curr_mtime))
             configs=read_configs(configpath)
             config_mtime=int(os.path.getmtime(configpath))
-        # Kick off the processes
-        for details in configs:
+        # Kick off the SNMP-querying processes
+        for target in configs['metrics']:
             proc=mp.Process(target=snmp_query.query_device,
-                    args=(details, logger, state, PERIOD, queue),
-                    name=details['hostname'])
+                    args=(target, logger, state, PERIOD, queue),
+                    name=target['hostname'])
             procs.append(proc) # Add the process to the list before starting it
             proc.start()
         # Gather the processes back in

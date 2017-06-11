@@ -90,6 +90,11 @@ def query_device(details, logger, state, period, queue):
     '''
     hostname=details['hostname']
     logger.debug('Querying host %s' % hostname)
+    # Decide where to send the SNMP queries
+    if 'address' in details:
+        address=details['address']
+    else:
+        address=hostname
     # Process the metrics in turn
     for metric in details['metrics']:
         # Shorter references
@@ -116,7 +121,7 @@ def query_device(details, logger, state, period, queue):
         else:
             logger.debug('Fetching OID %s from target %s' % (oid, hostname))
         # Actually fetch the result amid all the mad logging
-        val=int(snmpGet(hostname, oid, details['community'], logger, mib))
+        val=int(snmpGet(address, oid, details['community'], logger, mib))
         # Do some more mad logging
         if mib:
             logger.debug('%s - %s::%s (%s) = %s' % (hostname, mib, oid, metricname, val))
