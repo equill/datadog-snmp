@@ -26,6 +26,9 @@
 # Built-in libraries
 import time
 
+# Third-party libraries
+import dogapi
+
 
 # Config variables
 #
@@ -35,11 +38,13 @@ MAX_ITEMS=10
 # How many seconds to pause when the queue is empty
 PAUSE=1
 
-def run(queue, logger):
+def run(queue, api_key, logger):
     '''
     Take whatever's in the queue, and forward it to Datadog.
     '''
     logger.info('Starting writer process')
+    logger.info('Initialising DogAPI object')
+    dog=dogapi.http.DogHttpApi(api_key=api_key, json_responses=True)
     while True:
         # If there's nothing in the queue, give it a moment
         if queue.empty():
@@ -56,6 +61,7 @@ def run(queue, logger):
                 else:
                     acc.append(queue.get())
             # Process the items we accumulated
-            logger.info('%d results retrieved: %s' % (len(acc), acc))
+            logger.info('%d results retrieved for forwarding to Datadog' % (len(acc)))
+            dog.metrics(acc)
             # Clear the accumulator for the next run
             acc[:]=[]

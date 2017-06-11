@@ -81,7 +81,7 @@ def main(logger, configpath):
     configs=read_configs(configpath)
     config_mtime=int(os.path.getmtime(configpath))
     # Start the process that reads the queue and feeds Datadog
-    writer=mp.Process(target=result_writer.run, args=(queue, logger), name='writer')
+    writer=mp.Process(target=result_writer.run, args=(queue, configs['global']['datadog_api_key'], logger), name='writer')
     writer.start()
     # Periodically poll the targets
     while True:
