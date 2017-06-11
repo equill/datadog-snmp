@@ -84,7 +84,7 @@ def snmpGet(hostname, oid, community, logger, mib=False, port=161):
         return varBinds[0][1].prettyPrint()
 
 
-def query_device(details, logger, state, period):
+def query_device(details, logger, state, period, queue):
     '''
     Send an SNMP query to a device, and report on the results.
     '''
@@ -153,4 +153,5 @@ def query_device(details, logger, state, period):
             'tags': metric['tags'],
         }
         logger.debug('Result for %s-%s: %s' % (hostname, index, result))
+        queue.put(result)
     return True

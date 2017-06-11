@@ -32,6 +32,7 @@ import sys
 import time
 
 # Local modules
+import result_writer
 import snmp_query
 
 
@@ -75,9 +76,14 @@ def main(logger, configpath):
     procs=[]            # A list of running processes
     mgr=mp.Manager()    # Source of shared-state structures
     state=mgr.dict()    # The shared dict we'll use for sharing state
+    queue=mp.Queue()    # For passing results from SNMP queries to the Datadog writer
     # Read the initial config file, and remember when we read it
     configs=read_configs(configpath)
     config_mtime=int(os.path.getmtime(configpath))
+    # Start the process that reads the queue and feeds Datadog
+    writer=mp.Process(target=result_writer.run, args=(queue, logger), name='writer')
+    writer.start()
+    # Periodically poll the targets
     while True:
         starttime=int(time.time())
         logger.info('Starting run with timestamp %d' % starttime)
@@ -91,7 +97,7 @@ def main(logger, configpath):
         # Kick off the processes
         for details in configs:
             proc=mp.Process(target=snmp_query.query_device,
-                    args=(details, logger, state, PERIOD),
+                    args=(details, logger, state, PERIOD, queue),
                     name=details['hostname'])
             procs.append(proc) # Add the process to the list before starting it
             proc.start()
@@ -108,6 +114,9 @@ def main(logger, configpath):
             delay == PERIOD
         logger.info('Run complete at timestamp %d after %d seconds. Pausing %d seconds for the next run.' % (endtime, endtime - starttime, delay))
         time.sleep(delay)
+    # Reclaim the writer
+    writer.terminate()
+    writer.join()
     # Explicitly return _something_
     return True
 
