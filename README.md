@@ -40,4 +40,6 @@ A JSON-formatted text file is expected; I know comments aren't valid in JSON, bu
 ]
 ```
 
+If a MIB is specified, the OID will be checked for a trailing index, e.g. `ifInOctets.1`. If there is one, it will be used; if not, 0 will be assumed, which is the SNMP default for a single-value OID.
+
 See `config.json` for an example.

@@ -33,36 +33,39 @@ def snmpGet(hostname, oid, community, logger, mib=False, port=161):
     '''
     Perform an SNMP GET for a single OID or scalar attribute.
     Return only the value.
+    If a MIB is not supplied, use the OID alone, as-is.
+    If a MIB is supplied, check whether a numeric index was appended to the OID;
+    use it if it was, and assume it should be 0 if not.
     '''
-    # Handle the case of an unspecified MIB
+    # Determine the type of object to use.
+    # Depends on whether a MIB and/or OID index were specified.
     if mib:
-        cmd=pysnmp.hlapi.getCmd(
-                # Create the SNMP engine
-                pysnmp.hlapi.SnmpEngine(),
-                # Authentication: set the SNMP version (2c) and community-string
-                pysnmp.hlapi.CommunityData(community, mpModel=1),
-                # Set the transport and target: UDP, hostname:port
-                pysnmp.hlapi.UdpTransportTarget((hostname, port)),
-                # Context is a v3 thing, but appears to be required anyway
-                pysnmp.hlapi.ContextData(),
-                # Specify the MIB object to read.
-                # The 0 means we're retrieving a scalar value,
-                # And we're helpfully .
-                pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(mib, oid, 0)))
+        # Did the caller already specify the index to use?
+        if re.search("\.[0-9]+", oid):
+            (oidbase, oidindex)=re.split("\.", oid)
+        # If not, assume the caller wants the first instance of this OID,
+        # because that's how SNMP rolls.
+        # The 0 means we're retrieving a scalar value,
+        else:
+            oidbase=oid
+            oidindex=0
+        # Create the object
+        objtype=pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(mib, oidbase, oidindex))
+    # Assume the caller knows precisely what they want, and leave it alone
     else:
-        cmd=pysnmp.hlapi.getCmd(
-                # Create the SNMP engine
-                pysnmp.hlapi.SnmpEngine(),
-                # Authentication: set the SNMP version (2c) and community-string
-                pysnmp.hlapi.CommunityData(community, mpModel=1),
-                # Set the transport and target: UDP, hostname:port
-                pysnmp.hlapi.UdpTransportTarget((hostname, port)),
-                # Context is a v3 thing, but appears to be required anyway
-                pysnmp.hlapi.ContextData(),
-                # Specify the object to read.
-                # The 0 means we're retrieving a scalar value.
-                pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(oid))
-                )
+        objtype=pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(oid))
+    # Create the command to use
+    cmd=pysnmp.hlapi.getCmd(
+            # Create the SNMP engine
+            pysnmp.hlapi.SnmpEngine(),
+            # Authentication: set the SNMP version (2c) and community-string
+            pysnmp.hlapi.CommunityData(community, mpModel=1),
+            # Set the transport and target: UDP, hostname:port
+            pysnmp.hlapi.UdpTransportTarget((hostname, port)),
+            # Context is a v3 thing, but appears to be required anyway
+            pysnmp.hlapi.ContextData(),
+            # Specify the MIB object to read.
+            objtype)
     # Use pysnmp to retrieve the data
     errorIndication, errorStatus, errorIndex, varBinds = next(cmd)
     # Handle the responses
