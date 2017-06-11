@@ -77,67 +77,6 @@ def snmpGet(hostname, oid, community, logger, mib=False, port=161):
     else:
         return varBinds[0][1].prettyPrint()
 
-def snmpBulkGet(hostname, mib, attr, community, logger, port=161):
-    '''
-    Perform an SNMP BULKGET on mib::attr.
-    Return a 2-level dict:
-    - rowname
-        - index = value
-    This structure mirrors SNMP's representation of tables as rows with indexed values.
-    '''
-    logger.debug('Querying %s for %s::%s', hostname, mib, attr)
-    # Number of nonrepeating MIB variables in the request
-    nonRepeaters = 0
-    # Maximum number of variables requested for each of the remaining MIB variables in the request
-    maxRepetitions = 10000
-    # Use pysnmp to retrieve the data
-    data={} # Accumulator for the results
-    for (errorIndication,
-            errorStatus,
-            errorIndex,
-            varBinds) in pysnmp.hlapi.bulkCmd(
-                    # Create the SNMP engine
-                    pysnmp.hlapi.SnmpEngine(),
-                    # Authentication: set the SNMP version (2c) and community-string
-                    pysnmp.hlapi.CommunityData(community, mpModel=1),
-                    # Set the transport and target: UDP, hostname:port
-                    pysnmp.hlapi.UdpTransportTarget((hostname, port)),
-                    # Context is a v3 thing, but appears to be required anyway
-                    pysnmp.hlapi.ContextData(),
-                    # Specify operational limits
-                    nonRepeaters,
-                    maxRepetitions,
-                    # Specify the MIB object to read.
-                    # The 0 means we're retrieving a scalar value.
-                    pysnmp.hlapi.ObjectType(pysnmp.hlapi.ObjectIdentity(mib, attr)),
-                    # Stop when we get results outside the scope we requested,
-                    # instead of carrying on until the agent runs out of OIDs to send back.
-                    lexicographicMode=False):
-        # Handle the responses
-        if errorIndication:
-            logger.error(errorIndication)
-            return False
-        elif errorStatus:
-            logger.error('%s at %s' % (errorStatus.prettyPrint(), errorIndex and varBinds[int(errorIndex) - 1][0] or '?'))
-            return False
-        # If we actually got something, return it in human-readable form
-        else:
-            for varBind in varBinds:
-                # Extract the index values.
-                # We're breaking down 'IF-MIB::ifType.530' into (row='ifType', index='530')
-                keys = re.split('\.', re.split('::', varBind[0].prettyPrint())[1], maxsplit=1)
-                row = keys[0]
-                index = keys[1]
-                # Now get the value
-                value = varBind[1].prettyPrint()
-                # Update the results table, ensuring the row is actually present
-                logger.debug('%s.%s = %s', row, index, value)
-                if row not in data:
-                    data[row] = {}
-                data[row][index] = value
-    # Return what we found
-    return data
-
 
 def query_device(details, logger, state):
     '''
