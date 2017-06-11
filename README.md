@@ -9,35 +9,43 @@ Automatically re-reads the config file if it's been changed. Does this by checki
 
 Written for python 3.5, with no attempt at backward compatibility.
 
-Note: currently only handles scalars. Tables are not handled.
-Also, it doesn't yet actually send anything to Datadog.
+## Limitations
+- only handles scalars. Tables are not handled.
+- tags are per-metric; there's no way of specifying global or per-target tags
+    - this _may_ be added in future; it simply hasn't been implemented so far.
 
 # Configuration
 
 A JSON-formatted text file is expected; I know comments aren't valid in JSON, but they seemed like the best way of illustrating this:
 
 ```
-[   // A list of targets in the form of dicts
-  {
-    "hostname": "localhost",    // Without this, you're not getting far
-    "community": "public',      // SNMPv2 community string for authentication
-    "metrics": [    // a list of metrics, again as dicts
-      {
-        // Mandatory attributes
-        "oid": "sysUpTime",     // Can be either a name or a numeric OID
-        // Optional attributes
-        "mib": "SNMPv2-MIB",    // If this isn't specified, it's assumed to be numeric.
-                                // NB: you'll need to append .0 yourself for scalars.
-        "tags": ["hostname:localhost"], // Tags to forward to Datadog with this metric
-        "metricname": "hostname",       // The name to give Datadog;
-                                        // if unspecified, the OID will be used.
-        "counter": "true"       // If set, prompts the script to autoconvert it
-                                // to a rate before sending to Datadog.
-                                // The actual value doesn't matter
-      }
+{
+    "global": {
+        "datadog_api_key": "key goes here"
+    },
+    "metrics": [   // A list of targets in the form of dicts
+    {
+        "hostname": "localhost",    // Without this, you're not getting far
+        "address": "127.0.0.1"      // Optional; if the hostname resolves correctly, you don't need this
+        "community": "public',      // SNMPv2 community string for authentication
+            "metrics": [    // a list of metrics, again as dicts
+            {
+                // Mandatory attributes
+                "oid": "sysUpTime",     // Can be either a name or a numeric OID
+                // Optional attributes
+                "mib": "SNMPv2-MIB",    // If this isn't specified, it's assumed to be numeric.
+                // NB: you'll need to append .0 yourself for scalars.
+                "tags": ["hostname:localhost"], // Tags to forward to Datadog with this metric
+                "metricname": "hostname",       // The name to give Datadog;
+                // if unspecified, the OID will be used.
+                "counter": "true"       // If set, prompts the script to autoconvert it
+                    // to a rate before sending to Datadog.
+                    // The actual value doesn't matter
+            }
+            ]
+    }
     ]
-  }
-]
+}
 ```
 
 If a MIB is specified, the OID will be checked for a trailing index, e.g. `ifInOctets.1`. If there is one, it will be used; if not, 0 will be assumed, which is the SNMP default for a single-value OID.
