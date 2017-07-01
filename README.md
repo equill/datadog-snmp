@@ -1,6 +1,9 @@
 Datadog-SNMP
 ============
 
+**Obsolete**
+The built-in SNMP integration in Datadog-agent now works well enough that this is not required, so I've abandoned further work.
+
 A standalone script to poll SNMPv2 targets and forward the results to Datadog, with appropriate tags added and counters converted to rates.
 
 Uses multiprocessing to parallelise things, to get past the scalability limit of datadog-agent's single-threaded nature, and to avoid the Global Interpreter Lock that would otherwise prevent concurrency.
